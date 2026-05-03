@@ -2,13 +2,12 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <!-- 完美适配手机端视口 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <!-- 屏蔽图片防盗链 -->
+    <!-- 突破防盗链显示图片 -->
     <meta name="referrer" content="no-referrer">
-    <title>试卷解析导出工具</title>
+    <title>xkw试卷解析下载</title>
     <style>
-        /* ================= 屏幕显示的 Apple 简约 UI ================= */
+
         :root {
             --bg-color: #f5f5f7;
             --text-main: #1d1d1f;
@@ -25,7 +24,7 @@
         body {
             margin: 0;
             padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
             background-color: var(--bg-color);
             color: var(--text-main);
             -webkit-font-smoothing: antialiased;
@@ -73,13 +72,10 @@
             border: 1px solid var(--border-color);
             border-radius: var(--radius-medium);
             resize: none;
-            font-family: ui-monospace, SFMono-Regular, monospace;
+            font-family: monospace;
             font-size: 13px;
             background-color: #fafafa;
-            color: var(--text-main);
-            transition: all 0.3s ease;
             margin-bottom: 16px;
-            line-height: 1.5;
         }
 
         textarea:focus {
@@ -108,10 +104,6 @@
             width: 100%;
         }
 
-        button:active {
-            transform: scale(0.98);
-        }
-
         button.success-btn {
             background-color: #34c759;
             display: none;
@@ -120,7 +112,6 @@
         button:disabled {
             background-color: #e5e5ea;
             color: #86868b;
-            cursor: not-allowed;
         }
 
         #status-text {
@@ -155,71 +146,61 @@
             max-width: 100%;
             height: auto;
             border-radius: var(--radius-medium);
-            display: inline-block;
         }
 
-        /* ================= 专门针对 iOS Safari 优化的物理级打印引擎 ================= */
+    
         @media print {
-            /* 1. 彻底清零边距，抹杀 iOS 时间和域名水印 */
+
             @page {
-                size: A4 portrait !important;
+                size: A4 portrait;
                 margin: 0 !important;
             }
 
-            /* 2. 锁死 A4 物理宽度，解决“太宽”的问题 */
             html, body {
                 margin: 0 !important;
                 padding: 0 !important;
+                width: 100% !important;
                 background-color: #ffffff !important;
-                width: 210mm !important; 
             }
 
-            /* 隐藏屏幕控制区 */
-            .no-print {
-                display: none !important;
-            }
+            .no-print { display: none !important; }
 
             .preview-container {
                 display: block !important;
-                width: 210mm !important;
+                width: 100% !important;
+                margin: 0 !important;
                 padding: 0 !important;
-                margin: 0 auto !important;
                 background-color: transparent !important;
             }
 
-            /* 3. 苹果排版引擎防坑：改用 block 布局，锁定每页物理高宽 */
             .img-wrapper-screen {
                 display: block !important;
-                width: 210mm !important;
-                height: 296mm !important; /* 留出1mm的安全区，防止多出一张空白页 */
+                width: 100% !important;
+                
+
+                height: 95vh !important; 
+                
                 page-break-after: always !important;
                 break-after: page !important;
                 margin: 0 !important;
                 padding: 0 !important;
-                background: transparent !important;
-                box-shadow: none !important;
                 border: none !important;
-                border-radius: 0 !important;
-                overflow: hidden !important; 
+                box-shadow: none !important;
+                background: transparent !important;
             }
 
-            /* 最后一页不换页 */
+
             .img-wrapper-screen:last-child {
                 page-break-after: auto !important;
                 break-after: auto !important;
             }
 
-            /* 4. 图片等比例适应 A4 纸内，绝对不溢出拉宽 */
             .img-wrapper-screen img {
                 display: block !important;
                 width: 100% !important;
                 height: 100% !important;
-                max-width: 210mm !important;
-                max-height: 296mm !important;
-                object-fit: contain !important; /* 等比缩放，不会裁切 */
-                object-position: center center !important; /* 画面居中 */
+                object-fit: contain !important; 
                 margin: 0 auto !important;
-                padding: 0 !important;
                 border-radius: 0 !important;
             }
         }
@@ -230,8 +211,8 @@
     <div class="no-print">
         <div class="control-panel">
             <div class="header">
-                <h1>导出试卷 PDF</h1>
-                <p>纯内存排版，0网络损耗</p>
+                <h1>xkw试卷解析下载</h1>
+                <p>by @叶天哲</p>
             </div>
             
             <textarea id="json-input" placeholder='请在此粘贴包含 images 的 JSON 数组数据...'></textarea>
@@ -245,7 +226,7 @@
         </div>
     </div>
 
-    <!-- 图片预览与 PDF 渲染容器 -->
+    <!-- 渲染容器 -->
     <div class="preview-container" id="image-container"></div>
 
     <script>
@@ -271,7 +252,7 @@
                 return;
             }
 
-            // 修改网页 Title（iOS Safari 会自动把 Title 作为 PDF 的默认保存名）
+            // 修改网页 Title 自动命名
             let fileName = "合并试卷";
             if (data.length > 0 && data[0].fileName) {
                 fileName = data[0].fileName.replace(/\(原卷版\).*|\(解析版\).*/g, '').trim();
@@ -286,7 +267,7 @@
             });
 
             if (images.length === 0) {
-                status.innerText = "⚠️ 未在 JSON 中发现有效图片";
+                status.innerText = "⚠️ 未发现有效图片";
                 status.style.color = "#ff3b30";
                 return;
             }
@@ -299,7 +280,7 @@
 
             let loadedCount = 0;
 
-            images.forEach((url, index) => {
+            images.forEach((url) => {
                 const wrapper = document.createElement('div');
                 wrapper.className = 'img-wrapper-screen';
 
@@ -310,9 +291,9 @@
                     status.innerText = `加载至内存: ${loadedCount} / ${images.length}`;
                     
                     if (loadedCount === images.length) {
-                        status.innerText = `✅ 内存渲染完毕，可以导出`;
+                        status.innerText = `✅ 内存渲染完毕，排版已校准`;
                         status.style.color = "#34c759";
-                        parseBtn.innerText = "重新解析数据";
+                        parseBtn.innerText = "重新解析";
                         parseBtn.disabled = false;
                         exportBtn.style.display = 'block';
                     }
@@ -325,7 +306,6 @@
         }
 
         function triggerPrint() {
-            // 给系统一丁点缓冲时间应用打印样式
             setTimeout(() => {
                 window.print();
             }, 100);
