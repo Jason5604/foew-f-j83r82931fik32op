@@ -2,12 +2,13 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
+    <!-- 完美适配手机端视口 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <!-- 核心：绕过图片防盗链，允许图片在页面正常显示 -->
+    <!-- 屏蔽图片防盗链 -->
     <meta name="referrer" content="no-referrer">
-    <title>试卷解析工具</title>
+    <title>试卷解析导出工具</title>
     <style>
-        /* ================= Apple 风格屏幕 UI ================= */
+        /* ================= 屏幕显示的 Apple 简约 UI ================= */
         :root {
             --bg-color: #f5f5f7;
             --text-main: #1d1d1f;
@@ -30,19 +31,18 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        /* 打印时隐藏控制区 */
         .no-print {
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 40px 20px;
+            padding: 30px 20px;
         }
 
         .control-panel {
             width: 100%;
             max-width: 600px;
             background: var(--card-bg);
-            padding: 40px;
+            padding: 32px 24px;
             border-radius: var(--radius-large);
             box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
             box-sizing: border-box;
@@ -54,13 +54,13 @@
         }
 
         .header h1 {
-            font-size: 28px;
+            font-size: 26px;
             font-weight: 600;
             margin: 0 0 8px 0;
         }
 
         .header p {
-            font-size: 15px;
+            font-size: 14px;
             color: var(--text-secondary);
             margin: 0;
         }
@@ -79,6 +79,7 @@
             color: var(--text-main);
             transition: all 0.3s ease;
             margin-bottom: 16px;
+            line-height: 1.5;
         }
 
         textarea:focus {
@@ -107,25 +108,19 @@
             width: 100%;
         }
 
-        button:hover:not(:disabled) {
-            background-color: var(--accent-hover);
+        button:active {
             transform: scale(0.98);
         }
 
         button.success-btn {
             background-color: #34c759;
-            display: none; /* 初始隐藏 */
-        }
-
-        button.success-btn:hover {
-            background-color: #30b753;
+            display: none;
         }
 
         button:disabled {
             background-color: #e5e5ea;
             color: #86868b;
             cursor: not-allowed;
-            transform: none;
         }
 
         #status-text {
@@ -137,76 +132,94 @@
             min-height: 20px;
         }
 
-        /* 预览区样式 */
         .preview-container {
             width: 100%;
             max-width: 800px;
             margin: 0 auto;
             display: flex;
             flex-direction: column;
-            gap: 24px;
+            gap: 20px;
             padding: 0 20px 40px 20px;
             box-sizing: border-box;
         }
 
-        .img-wrapper {
+        .img-wrapper-screen {
             background: var(--card-bg);
-            padding: 16px;
+            padding: 12px;
             border-radius: var(--radius-large);
             box-shadow: 0 4px 20px rgba(0,0,0,0.03);
-            display: flex;
-            justify-content: center;
+            text-align: center;
         }
 
-        .img-wrapper img {
+        .img-wrapper-screen img {
             max-width: 100%;
             height: auto;
             border-radius: var(--radius-medium);
-            display: block;
+            display: inline-block;
         }
 
-        /* ================= 纯净 0 网络合并 PDF 引擎 (利用打印机制) ================= */
+        /* ================= 专门针对 iOS Safari 优化的物理级打印引擎 ================= */
         @media print {
+            /* 1. 彻底清零边距，抹杀 iOS 时间和域名水印 */
             @page {
-                size: A4 portrait;
-                margin: 0; /* 无边距 */
+                size: A4 portrait !important;
+                margin: 0 !important;
             }
-            body, html {
-                margin: 0;
-                padding: 0;
-                background-color: #ffffff;
+
+            /* 2. 锁死 A4 物理宽度，解决“太宽”的问题 */
+            html, body {
+                margin: 0 !important;
+                padding: 0 !important;
+                background-color: #ffffff !important;
+                width: 210mm !important; 
             }
-            /* 打印时彻底隐藏所有 UI */
+
+            /* 隐藏屏幕控制区 */
             .no-print {
                 display: none !important;
             }
+
             .preview-container {
-                display: block;
-                padding: 0;
-                margin: 0;
-                max-width: none;
+                display: block !important;
+                width: 210mm !important;
+                padding: 0 !important;
+                margin: 0 auto !important;
+                background-color: transparent !important;
             }
-            /* 每一张图片强制占满一整页 A4 */
-            .img-wrapper {
-                page-break-after: always;
-                break-after: page;
-                width: 100vw;
-                height: 100vh;
+
+            /* 3. 苹果排版引擎防坑：改用 block 布局，锁定每页物理高宽 */
+            .img-wrapper-screen {
+                display: block !important;
+                width: 210mm !important;
+                height: 296mm !important; /* 留出1mm的安全区，防止多出一张空白页 */
+                page-break-after: always !important;
+                break-after: page !important;
                 margin: 0 !important;
                 padding: 0 !important;
-                border-radius: 0 !important;
-                box-shadow: none !important;
                 background: transparent !important;
-                display: flex;
-                align-items: center;
-                justify-content: center;
+                box-shadow: none !important;
+                border: none !important;
+                border-radius: 0 !important;
+                overflow: hidden !important; 
             }
-            .img-wrapper img {
-                max-width: 100%;
-                max-height: 100%;
-                width: 100%;
-                height: 100%;
-                object-fit: contain; /* 等比例缩放居中，绝不裁剪 */
+
+            /* 最后一页不换页 */
+            .img-wrapper-screen:last-child {
+                page-break-after: auto !important;
+                break-after: auto !important;
+            }
+
+            /* 4. 图片等比例适应 A4 纸内，绝对不溢出拉宽 */
+            .img-wrapper-screen img {
+                display: block !important;
+                width: 100% !important;
+                height: 100% !important;
+                max-width: 210mm !important;
+                max-height: 296mm !important;
+                object-fit: contain !important; /* 等比缩放，不会裁切 */
+                object-position: center center !important; /* 画面居中 */
+                margin: 0 auto !important;
+                padding: 0 !important;
                 border-radius: 0 !important;
             }
         }
@@ -217,15 +230,15 @@
     <div class="no-print">
         <div class="control-panel">
             <div class="header">
-                <h1>试卷解析与导出</h1>
-                <p>底层内存渲染，纯粹 0 网络断点合并</p>
+                <h1>导出试卷 PDF</h1>
+                <p>纯内存排版，0网络损耗</p>
             </div>
             
-            <textarea id="json-input" placeholder='请在此粘贴包含 images 的完整 JSON 数据...'></textarea>
+            <textarea id="json-input" placeholder='请在此粘贴包含 images 的 JSON 数组数据...'></textarea>
             
             <div class="btn-group">
-                <button id="parse-btn" onclick="parseAndPreview()">1. 解析 JSON 并预览</button>
-                <button id="export-btn" class="success-btn" onclick="window.print()">2. 合并并导出 PDF</button>
+                <button id="parse-btn" onclick="parseAndPreview()">1. 解析 JSON 并渲染</button>
+                <button id="export-btn" class="success-btn" onclick="triggerPrint()">2. 存为本地 PDF</button>
             </div>
 
             <div id="status-text"></div>
@@ -258,8 +271,7 @@
                 return;
             }
 
-            // 【黑科技】提取干净文件名并修改网页 Title
-            // 当调用 window.print() 导出 PDF 时，浏览器会自动使用 Title 作为 PDF 的文件名
+            // 修改网页 Title（iOS Safari 会自动把 Title 作为 PDF 的默认保存名）
             let fileName = "合并试卷";
             if (data.length > 0 && data[0].fileName) {
                 fileName = data[0].fileName.replace(/\(原卷版\).*|\(解析版\).*/g, '').trim();
@@ -279,31 +291,28 @@
                 return;
             }
 
-            // 初始化 UI
             container.innerHTML = '';
             parseBtn.disabled = true;
             exportBtn.style.display = 'none';
-            status.innerText = `发现 ${images.length} 张试卷，正在本地内存渲染中...`;
+            status.innerText = `正在处理 ${images.length} 张试卷...`;
             status.style.color = "var(--accent-color)";
 
             let loadedCount = 0;
 
-            // 渲染图片
             images.forEach((url, index) => {
                 const wrapper = document.createElement('div');
-                wrapper.className = 'img-wrapper';
+                wrapper.className = 'img-wrapper-screen';
 
                 const img = document.createElement('img');
                 
-                // 监听加载完成，全部加载完才允许导出，确保 PDF 不缺页
                 img.onload = img.onerror = () => {
                     loadedCount++;
-                    status.innerText = `正在加载: ${loadedCount} / ${images.length}`;
+                    status.innerText = `加载至内存: ${loadedCount} / ${images.length}`;
                     
                     if (loadedCount === images.length) {
-                        status.innerText = `✅ 全部渲染完成！请点击下方绿色按钮导出`;
+                        status.innerText = `✅ 内存渲染完毕，可以导出`;
                         status.style.color = "#34c759";
-                        parseBtn.innerText = "重新解析";
+                        parseBtn.innerText = "重新解析数据";
                         parseBtn.disabled = false;
                         exportBtn.style.display = 'block';
                     }
@@ -313,6 +322,13 @@
                 wrapper.appendChild(img);
                 container.appendChild(wrapper);
             });
+        }
+
+        function triggerPrint() {
+            // 给系统一丁点缓冲时间应用打印样式
+            setTimeout(() => {
+                window.print();
+            }, 100);
         }
     </script>
 </body>
